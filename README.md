@@ -7,6 +7,7 @@ Una aplicación web ligera y auto-alojada para añadir funcionalidad Text-To-Spe
 - 🎙️ **Voz Nativa y Personalizada:** Utiliza las voces de tu sistema operativo (Windows/macOS), con preferencia automática por el español.
 - 🚀 **Cero Dependencias Externas:** La librería `tmi.js` se incluye localmente para evitar bloqueos de red o CDNs caídos.
 - 🛡️ **Filtros Avanzados:** Opciones independientes para ignorar moderadores, VIPs, el Broadcaster o usuarios específicos por nombre.
+- 🎚️ **Control Total:** Deslizantes para Volumen y Velocidad, además de un interruptor de Silencio (Mute).
 - ✨ **Diseño Moderno:** Panel dividido con configuración a la izquierda e historial de mensajes en tiempo real a la derecha.
 - 🔊 **Ajustes en Caliente:** Cambia el volumen o la voz en pleno directo sin necesidad de reiniciar la conexión.
 

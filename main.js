@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const voiceSelect = document.getElementById('voice');
     const volumeInput = document.getElementById('volume');
     const volumeVal = document.getElementById('volume-val');
+    const speedInput = document.getElementById('speed');
+    const speedVal = document.getElementById('speed-val');
+    const muteTtsBtn = document.getElementById('mute-tts-btn');
     const form = document.getElementById('tts-form');
 
     // Config Inputs
@@ -68,6 +71,24 @@ document.addEventListener('DOMContentLoaded', () => {
         volumeVal.textContent = e.target.value;
     });
 
+    // Speed slider update
+    speedInput.addEventListener('input', (e) => {
+        speedVal.textContent = e.target.value;
+    });
+
+    // Mute button logic
+    let isMuted = false;
+    muteTtsBtn.addEventListener('click', () => {
+        isMuted = !isMuted;
+        if (isMuted) {
+            muteTtsBtn.innerHTML = '🔇<br>Muted';
+            muteTtsBtn.classList.add('btn-active');
+        } else {
+            muteTtsBtn.innerHTML = '🔊<br>Unmuted';
+            muteTtsBtn.classList.remove('btn-active');
+        }
+    });
+
     testTtsBtn.addEventListener('click', () => {
         addToQueue("Prueba de sonido exitosa", "Sistema");
     });
@@ -82,6 +103,12 @@ document.addEventListener('DOMContentLoaded', () => {
         isSpeaking = true;
         const item = ttsQueue.shift();
 
+        // If muted, we skip the audio part but continue to the next item immediately
+        if (isMuted) {
+            playNextInQueue();
+            return;
+        }
+
         const utterance = new SpeechSynthesisUtterance(item.text);
 
         const selectedVoiceURI = voiceSelect.value;
@@ -92,7 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        utterance.volume = parseInt(volumeInput.value, 10) / 100;
+        // Apply a quadratic curve for a more natural volume perception
+        const volumeLinear = parseFloat(volumeInput.value) / 100;
+        const currentVolume = Math.pow(volumeLinear, 2);
+
+        const currentRate = parseFloat(speedInput.value);
+
+        utterance.volume = currentVolume;
+        utterance.rate = currentRate;
 
         utterance.onend = () => {
             setTimeout(playNextInQueue, 300);
@@ -104,12 +138,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         window.speechSynthesis.speak(utterance);
-
-        // Update UI logic
-        addLogMessage(item.user, item.originalMsg);
     }
 
     function addToQueue(message, user) {
+        // Log the message immediately so it appears even if muted
+        addLogMessage(user, message);
+
         const textToSpeak = `${user} dice: ${message}`;
         ttsQueue.push({
             text: textToSpeak,

@@ -228,13 +228,40 @@ input[type="range"] {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    /* Changed to start to allow text wrapping without moving buttons */
     margin-bottom: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border);
+    gap: 1rem;
+}
+
+.status-header h3 {
+    font-size: 1.1rem;
+    word-break: break-word;
+    /* Prevent overflow of long channel names */
+    flex: 1;
+    /* Take up available space */
 }
 
 .controls-right {
-    margin-left: auto;
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    /* Prevent the buttons area from shrinking */
+}
+
+/* Fixed size buttons to prevent layout shifting */
+.btn-outline {
+    width: 100px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    padding: 0.5rem;
 }
 
 .text-accent {
@@ -257,8 +284,8 @@ input[type="range"] {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 450px;
-    /* Increased to balance with the longer form */
+    min-height: 520px;
+    /* Adjusted to match the left column height with new controls */
 }
 
 .log-container h4 {
@@ -270,13 +297,21 @@ input[type="range"] {
 }
 
 .message-list {
-    max-height: 400px;
-    /* Increased to allow more messages visible */
+    max-height: 460px;
+    /* Increased relative to container */
     overflow-y: auto;
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
     /* Messages append top-down */
+}
+
+/* Button Active State (for Mute) */
+.btn-outline.btn-active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
 }
 
 /* Log entry animations */
