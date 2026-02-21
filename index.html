@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch TTS App</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Load tmi.js locally to avoid CDN MIME and Content Blocking errors -->
+    <script src="./tmi.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Twitch TTS<span class="accent">.</span></h1>
+            <p>Self-hosted text-to-speech for your stream</p>
+        </header>
+
+        <main class="dashboard-card">
+            <!-- Left Column: Configuration -->
+            <div class="config-section">
+                <form id="tts-form">
+                    <div class="input-group">
+                        <label for="channel">Twitch Channel</label>
+                        <input type="text" id="channel" name="channel" placeholder="e.g. ninja" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="voice">TTS Voice</label>
+                        <select id="voice" name="voice">
+                            <option value="">Loading voices...</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="volume">Volume: <span id="volume-val">100</span>%</label>
+                        <input type="range" id="volume" name="volume" min="0" max="100" value="100">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="ignored-users">Usuarios Ignorados (separados por coma)</label>
+                        <input type="text" id="ignored-users" name="ignored-users"
+                            placeholder="nightbot, streamelements">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="ignore-mods" class="checkbox-label">
+                            <input type="checkbox" id="ignore-mods" name="ignore-mods">
+                            Ignorar Moderadores
+                        </label>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="ignore-vips" class="checkbox-label">
+                            <input type="checkbox" id="ignore-vips" name="ignore-vips">
+                            Ignorar VIPs
+                        </label>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="ignore-broadcaster" class="checkbox-label">
+                            <input type="checkbox" id="ignore-broadcaster" name="ignore-broadcaster">
+                            Ignorar Broadcaster (Tú)
+                        </label>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="subscribers-only" class="checkbox-label">
+                            <input type="checkbox" id="subscribers-only" name="subscribers-only">
+                            Solo Suscriptores
+                        </label>
+                    </div>
+
+                    <div class="test-controls" style="margin-top: 1.5rem">
+                        <button type="submit" id="connect-btn" class="btn-primary">Connect to Twitch</button>
+                        <button type="button" id="disconnect-btn" class="btn-secondary hidden">Disconnect</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right Column: Log and Status -->
+            <div class="result-section" id="result-section">
+                <div class="status-header">
+                    <h3>Status: <span id="connection-status">Disconnected</span></h3>
+                    <div class="test-controls controls-right">
+                        <button id="test-tts-btn" class="btn-outline">Test Voice</button>
+                    </div>
+                </div>
+
+                <div class="log-container">
+                    <h4>Recent Messages</h4>
+                    <div id="message-log" class="message-list">
+                        <!-- Messages will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
