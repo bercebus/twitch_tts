@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <!-- Load tmi.js locally to avoid CDN MIME and Content Blocking errors -->
-    <script src="./tmi.min.js"></script>
+    <!-- <script src="./tmi.min.js"></script> -->
 </head>
 
 <body>
@@ -29,19 +29,27 @@
                     </div>
 
                     <div class="input-group">
-                        <label for="voice">TTS Voice</label>
+                        <label for="voice">TTS Voice <span id="voice-source"></span></label>
                         <select id="voice" name="voice">
                             <option value="">Loading voices...</option>
                         </select>
                     </div>
 
                     <div class="input-group">
-                        <label for="volume">Volume: <span id="volume-val">100</span>%</label>
+                        <label>Engine: <span id="engine-info">Web Speech API</span></label>
+                        <div class="engine-badges">
+                            <span id="badge-webspeech" class="badge active">Web Speech</span>
+                            <span id="badge-espeak" class="badge">eSpeak NG</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="volume">Volume: <span id="volume-val">100</span>% <small id="volume-engine"></small></label>
                         <input type="range" id="volume" name="volume" min="0" max="100" value="100">
                     </div>
 
                     <div class="input-group">
-                        <label for="speed">Velocidad: <span id="speed-val">1.0</span>x</label>
+                        <label for="speed">Speed: <span id="speed-val">1.0</span>x <small id="speed-engine"></small></label>
                         <input type="range" id="speed" name="speed" min="0.5" max="2.0" step="0.1" value="1.0">
                     </div>
 
@@ -106,6 +114,8 @@
         </main>
     </div>
 
+    <script src="./vendor/espeakng/espeakng.js"></script>
+    <script src="tmi.min.js"></script>
     <script src="main.js"></script>
 </body>
 

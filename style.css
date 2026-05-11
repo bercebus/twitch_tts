@@ -276,6 +276,27 @@ input[type="range"] {
     color: #ef4444;
 }
 
+.engine-badges {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+}
+
+.badge.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
 .log-container {
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border);
