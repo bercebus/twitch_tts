@@ -39,6 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let espeakContext = null;
     let espeakPusher = null;
 
+    // --- Initialize default volume values ---
+    volumeInput.value = '70';
+    volumeVal.textContent = '70';
+    const volumeLinear = 0.7;
+    espeakVolume = Math.pow(volumeLinear, 2);
+
     function PushAudioNode(context, start_callback, end_callback, buffer_size, volume) {
         this.context = context;
         this.start_callback = start_callback;
