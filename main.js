@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let ttsQueue = [];
     let isSpeaking = false;
     let currentEngine = 'webspeech';
-    let espeakVolume = 1.0;
+    let espeakVolume = 0.7;  // Default volume for eSpeak NG (0.0 to 1.0)
 
     // --- Espeak NG Fallback State ---
     let espeakTTS = null;
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     populateVoiceList();
                 });
                 espeakTTS.set_voice("es");
-                espeakTTS.set_rate(150);
+                espeakTTS.set_rate(175);
                 espeakTTS.set_pitch(45);
                 espeakReady = true;
                 console.log("eSpeak NG WASM fallback listo");
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateEngineUI(engine) {
         currentEngine = engine;
         if (engine === 'espeak') {
-            engineInfo.textContent = 'eSpeak NG (Offline)';
+            engineInfo.textContent = 'eSpeak NG (Fallback)';
             badgeEspeak.classList.add('active');
             badgeWebspeech.classList.remove('active');
             voiceSource.textContent = '';
@@ -177,8 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
             speedInput.min = '80';
             speedInput.max = '450';
             speedInput.step = '1';
-            speedInput.value = '150';
-            speedVal.textContent = '150';
+            speedInput.value = '175';
+            speedVal.textContent = '175';
         } else {
             engineInfo.textContent = 'Web Speech API';
             badgeWebspeech.classList.add('active');
@@ -458,7 +458,7 @@ if (selectedValue && selectedValue.startsWith('espeak:')) {
         disconnectBtn.classList.remove('hidden');
 
         channelInput.disabled = true;
-        connectionStatus.textContent = 'Connecting...';
+        connectionStatus.textContent = 'Conectando...';
         connectionStatus.className = 'text-accent';
 
         client = new tmi.Client({
@@ -471,7 +471,7 @@ if (selectedValue && selectedValue.startsWith('espeak:')) {
 
         client.connect()
             .then(() => {
-                connectionStatus.textContent = `Connected to #${channel}`;
+                connectionStatus.textContent = `Conectado a #${channel}`;
                 connectionStatus.className = 'text-success';
                 addLogMessage("Sistema", `Conectado al canal: ${channel}`);
             })
@@ -523,7 +523,7 @@ if (selectedValue && selectedValue.startsWith('espeak:')) {
         });
 
         client.on('disconnected', (reason) => {
-            connectionStatus.textContent = `Disconnected: ${reason}`;
+            connectionStatus.textContent = `Desconectado: ${reason}`;
             connectionStatus.className = 'text-error';
             resetUI();
         });
@@ -535,7 +535,7 @@ if (selectedValue && selectedValue.startsWith('espeak:')) {
             client = null;
         }
         resetUI();
-        connectionStatus.textContent = 'Disconnected';
+        connectionStatus.textContent = 'Desconectado';
         connectionStatus.className = '';
         addLogMessage("Sistema", "Desconectado.");
     }
