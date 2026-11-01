@@ -295,6 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- TTS Queue System ---
+    // Identificador del mensaje en reproducción; los callbacks tardíos se descartan
+    let playToken = 0;
+
     async function playNextInQueue() {
         if (ttsQueue.length === 0) {
             isSpeaking = false;
@@ -303,6 +306,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         isSpeaking = true;
         const item = ttsQueue.shift();
+        const token = ++playToken;
+
+        // Finalización one-shot: cada mensaje avanza la cola como máximo una vez.
+        // Protege contra dobles señales (onend + onerror, pusher + síntesis vacía).
+        let finished = false;
+        function finishCurrent() {
+            if (finished || token !== playToken) return;
+            finished = true;
+            setTimeout(playNextInQueue, 300);
+        }
 
         if (isMuted) {
             playNextInQueue();
@@ -311,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const selectedValue = voiceSelect.value;
 
-if (selectedValue && selectedValue.startsWith('espeak:')) {
+        if (selectedValue && selectedValue.startsWith('espeak:')) {
             const voiceId = selectedValue.replace('espeak:', '');
 
             if (espeakContext) {
@@ -332,6 +345,11 @@ if (selectedValue && selectedValue.startsWith('espeak:')) {
             gainNode.gain.value = espeakVolume;
             gainNode.connect(espeakContext.destination);
 
+            let receivedSamples = false;
+
+            // El audio solo se da por terminado cuando el pusher vacía su cola
+            // de samples (end_callback), es decir, cuando termina de SONAR,
+            // no cuando termina de sintetizar.
             const pusher = new PushAudioNode(
                 espeakContext,
                 function() {
@@ -339,7 +357,7 @@ if (selectedValue && selectedValue.startsWith('espeak:')) {
                 },
                 function() {
                     console.log("PushAudioNode end callback");
-                    setTimeout(playNextInQueue, 300);
+                    finishCurrent();
                 },
                 4096,
                 espeakVolume
@@ -355,28 +373,38 @@ if (selectedValue && selectedValue.startsWith('espeak:')) {
             console.log("Setting voice:", voiceId);
             espeakTTS.set_voice(voiceId);
 
-            const textToSpeak = item.text;
-            console.log("Synthesizing:", textToSpeak);
+            console.log("Synthesizing:", item.text);
 
-            espeakTTS.synthesize(textToSpeak, function(samplesBuffer) {
-                console.log("Synthesize callback, samplesBuffer:", samplesBuffer);
+            espeakTTS.synthesize(item.text, function(samplesBuffer) {
+                // Callback tardío de otro mensaje: ignorar
+                if (token !== playToken) return;
+
+                // El worker envía un mensaje terminal (done) con samples undefined
+                // cuando termina la síntesis: NO es un error ni una señal de "no
+                // hay audio", solo indica que no llegaran más samples.
                 if (!samplesBuffer) {
-                    console.log("No samplesBuffer");
-                    if (pusher) pusher.close();
-                    setTimeout(playNextInQueue, 300);
+                    // Marcar el pusher como completo: no corta el audio en curso,
+                    // solo hace que, al vaciarse su cola, dispare end_callback.
+                    pusher.close();
+                    if (!receivedSamples) {
+                        // La síntesis no produjo ningún audio: terminar aquí
+                        console.log("Synthesis produced no samples");
+                        finishCurrent();
+                    }
                     return;
                 }
+
                 const samples = new Float32Array(samplesBuffer);
                 console.log("Samples length:", samples.length);
                 if (samples.length === 0) {
-                    if (pusher) pusher.close();
-                    setTimeout(playNextInQueue, 300);
+                    // El worker envía un chunk vacío al terminar la síntesis;
+                    // no es un error ni significa "sin audio": ignorarlo. El
+                    // avance lo dará el fin real de la reproducción (end_callback).
                     return;
                 }
-                if (pusher) {
-                    console.log("Pushing samples to pusher");
-                    pusher.push(samples);
-                }
+
+                receivedSamples = true;
+                pusher.push(samples);
             });
             return;
         }
@@ -399,13 +427,11 @@ if (selectedValue && selectedValue.startsWith('espeak:')) {
         utterance.volume = currentVolume;
         utterance.rate = currentRate;
 
-        utterance.onend = () => {
-            setTimeout(playNextInQueue, 300);
-        };
+        utterance.onend = () => finishCurrent();
 
         utterance.onerror = (e) => {
             console.error('TTS Error:', e);
-            playNextInQueue();
+            finishCurrent();
         };
 
         window.speechSynthesis.speak(utterance);
