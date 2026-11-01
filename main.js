@@ -104,11 +104,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (this.start_callback) this.start_callback();
         }
 
+        // Rellenar el buffer con silencio: el resto del bloque (lo que no se
+        // escribe en este callback) conserva datos viejos del buffer y produce
+        // un tirón justo al final del audio.
+        const outputData = evt.outputBuffer.getChannelData(0);
+        outputData.fill(0);
+
         var offset = 0;
         while (this.samples_queue.length && offset < evt.target.bufferSize) {
             var chunk = this.samples_queue[0];
             var to_copy = chunk.subarray(0, evt.target.bufferSize - offset);
-            const outputData = evt.outputBuffer.getChannelData(0);
             for (let i = 0; i < to_copy.length; i++) {
                 // Samples are already normalized (-1 to 1) from eSpeak
                 outputData[offset + i] = to_copy[i] * this.volume;
@@ -310,11 +315,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Finalización one-shot: cada mensaje avanza la cola como máximo una vez.
         // Protege contra dobles señales (onend + onerror, pusher + síntesis vacía).
+        // Pausa entre mensajes: el fin de eSpeak ya incluye ~150 ms de silencio
+        // artificial, así que basta con media pausa.
         let finished = false;
         function finishCurrent() {
             if (finished || token !== playToken) return;
             finished = true;
-            setTimeout(playNextInQueue, 300);
+            setTimeout(playNextInQueue, 150);
         }
 
         if (isMuted) {
@@ -373,9 +380,17 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Setting voice:", voiceId);
             espeakTTS.set_voice(voiceId);
 
-            console.log("Synthesizing:", item.text);
+            // eSpeak corta el último fonema si el texto no termina en
+            // puntuación de fin de oración (el glue nativo llama a espeak_Synth
+            // sin espeakENDPAUSE, así que tampoco añade su cola final).
+            let textToSpeak = item.text.trim();
+            if (!/[.!?…]$/.test(textToSpeak)) {
+                textToSpeak += '.';
+            }
 
-            espeakTTS.synthesize(item.text, function(samplesBuffer) {
+            console.log("Synthesizing:", textToSpeak);
+
+            espeakTTS.synthesize(textToSpeak, function(samplesBuffer) {
                 // Callback tardío de otro mensaje: ignorar
                 if (token !== playToken) return;
 
@@ -383,6 +398,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 // cuando termina la síntesis: NO es un error ni una señal de "no
                 // hay audio", solo indica que no llegaran más samples.
                 if (!samplesBuffer) {
+                    if (receivedSamples) {
+                        // Cola de silencio (~150 ms) para que el fin del audio
+                        // (disconnect del pusher) caiga dentro de silencio y la
+                        // última sílaba decaiga con naturalidad.
+                        pusher.push(new Float32Array(Math.round(pusher.context.sampleRate * 0.15)));
+                    }
                     // Marcar el pusher como completo: no corta el audio en curso,
                     // solo hace que, al vaciarse su cola, dispare end_callback.
                     pusher.close();
